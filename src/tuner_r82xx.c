@@ -387,7 +387,7 @@ static int r82xx_read(struct r82xx_priv *priv, uint8_t reg, uint8_t *val, int le
 static int r82xx_set_mux(struct r82xx_priv *priv, uint32_t freq)
 {
 	#ifdef DEBUG
-		fprintf(stderr, "Entered in %s()\n", __FUNCTION__);
+		fprintf(stderr, "Entered in %s( freq=%lu )\n", __FUNCTION__, (unsigned long)freq);
 	#endif
 
 	const struct r82xx_freq_range *range;
@@ -451,7 +451,7 @@ static int r82xx_set_mux(struct r82xx_priv *priv, uint32_t freq)
 static int r82xx_set_pll(struct r82xx_priv *priv, uint32_t freq)
 {
 	#ifdef DEBUG
-		fprintf(stderr, "Entered in %s()\n", __FUNCTION__);
+		fprintf(stderr, "Entered in %s( freq=%lu )\n", __FUNCTION__, (unsigned long)freq);
 	#endif
 
 	int rc, i;
@@ -527,7 +527,7 @@ static int r82xx_set_pll(struct r82xx_priv *priv, uint32_t freq)
 	vco_fra = (vco_freq - 2 * pll_ref * nint) / 1000;
 
 	if (nint > ((128 / vco_power_ref) - 1)) {
-		fprintf(stderr, "[R82XX] No valid PLL values for %u Hz!\n", freq);
+		fprintf(stderr, "[R82XX] No valid PLL values for %lu Hz!\n", (unsigned long)freq);
 		return -1;
 	}
 
@@ -603,75 +603,32 @@ static int r82xx_sysfreq_sel(struct r82xx_priv *priv, uint32_t freq,
 				 uint32_t delsys)
 {
 	#ifdef DEBUG
-		fprintf(stderr, "Entered in %s()\n", __FUNCTION__);
+		fprintf(stderr, "Entered in %s( freq=%lu, type=%u, delsys=%lu )\n", __FUNCTION__, (unsigned long)freq, type, (unsigned long)delsys);
 	#endif
 
 	int rc;
 	uint8_t mixer_top, lna_top, cp_cur, div_buf_cur, lna_vth_l, mixer_vth_l;
 	uint8_t air_cable1_in, cable2_in, pre_dect, lna_discharge, filter_cur;
 
-	switch (delsys) {
-	case SYS_DVBT:
-		if ((freq == 506000000) || (freq == 666000000) ||
-		   (freq == 818000000)) {
-			mixer_top = 0x14;	/* mixer top:14 , top-1, low-discharge */
-			lna_top = 0xe5;		/* detect bw 3, lna top:4, predet top:2 */
-			cp_cur = 0x28;		/* 101, 0.2 */
-			div_buf_cur = 0x20;	/* 10, 200u */
-		} else {
-			mixer_top = 0x24;	/* mixer top:13 , top-1, low-discharge */
-			lna_top = 0xe5;		/* detect bw 3, lna top:4, predet top:2 */
-			cp_cur = 0x38;		/* 111, auto */
-			div_buf_cur = 0x30;	/* 11, 150u */
-		}
-		lna_vth_l = 0x53;		/* lna vth 0.84	,  vtl 0.64 */
-		mixer_vth_l = 0x75;		/* mixer vth 1.04, vtl 0.84 */
-		air_cable1_in = 0x00;
-		cable2_in = 0x00;
-		pre_dect = 0x40;
-		lna_discharge = 14;
-		filter_cur = 0x40;		/* 10, low */
-		break;
-	case SYS_DVBT2:
+	if ((freq == 506000000) || (freq == 666000000) ||
+		(freq == 818000000)) {
+		mixer_top = 0x14;	/* mixer top:14 , top-1, low-discharge */
+		lna_top = 0xe5;		/* detect bw 3, lna top:4, predet top:2 */
+		cp_cur = 0x28;		/* 101, 0.2 */
+		div_buf_cur = 0x20;	/* 10, 200u */
+	} else {
 		mixer_top = 0x24;	/* mixer top:13 , top-1, low-discharge */
 		lna_top = 0xe5;		/* detect bw 3, lna top:4, predet top:2 */
-		lna_vth_l = 0x53;	/* lna vth 0.84	,  vtl 0.64 */
-		mixer_vth_l = 0x75;	/* mixer vth 1.04, vtl 0.84 */
-		air_cable1_in = 0x00;
-		cable2_in = 0x00;
-		pre_dect = 0x40;
-		lna_discharge = 14;
 		cp_cur = 0x38;		/* 111, auto */
 		div_buf_cur = 0x30;	/* 11, 150u */
-		filter_cur = 0x40;	/* 10, low */
-		break;
-	case SYS_ISDBT:
-		mixer_top = 0x24;	/* mixer top:13 , top-1, low-discharge */
-		lna_top = 0xe5;		/* detect bw 3, lna top:4, predet top:2 */
-		lna_vth_l = 0x75;	/* lna vth 1.04	,  vtl 0.84 */
-		mixer_vth_l = 0x75;	/* mixer vth 1.04, vtl 0.84 */
-		air_cable1_in = 0x00;
-		cable2_in = 0x00;
-		pre_dect = 0x40;
-		lna_discharge = 14;
-		cp_cur = 0x38;		/* 111, auto */
-		div_buf_cur = 0x30;	/* 11, 150u */
-		filter_cur = 0x40;	/* 10, low */
-		break;
-	default: /* DVB-T 8M */
-		mixer_top = 0x24;	/* mixer top:13 , top-1, low-discharge */
-		lna_top = 0xe5;		/* detect bw 3, lna top:4, predet top:2 */
-		lna_vth_l = 0x53;	/* lna vth 0.84	,  vtl 0.64 */
-		mixer_vth_l = 0x75;	/* mixer vth 1.04, vtl 0.84 */
-		air_cable1_in = 0x00;
-		cable2_in = 0x00;
-		pre_dect = 0x40;
-		lna_discharge = 14;
-		cp_cur = 0x38;		/* 111, auto */
-		div_buf_cur = 0x30;	/* 11, 150u */
-		filter_cur = 0x40;	/* 10, low */
-		break;
 	}
+	lna_vth_l = 0x53;		/* lna vth 0.84	,  vtl 0.64 */
+	mixer_vth_l = 0x75;		/* mixer vth 1.04, vtl 0.84 */
+	air_cable1_in = 0x00;
+	cable2_in = 0x00;
+	pre_dect = 0x40;
+	lna_discharge = 14;
+	filter_cur = 0x40;		/* 10, low */
 
 	if (priv->cfg->use_predetect) {
 		rc = r82xx_write_reg_mask(priv, 0x06, pre_dect, 0x40);
@@ -716,86 +673,52 @@ static int r82xx_sysfreq_sel(struct r82xx_priv *priv, uint32_t freq,
 	 * Set LNA
 	 */
 
-	if (type != TUNER_ANALOG_TV) {
-		/* LNA TOP: lowest */
-		rc = r82xx_write_reg_mask(priv, 0x1d, 0, 0x38);
-		if (rc < 0)
-			return rc;
+	/* LNA TOP: lowest */
+	rc = r82xx_write_reg_mask(priv, 0x1d, 0, 0x38);
+	if (rc < 0)
+		return rc;
 
-		/* 0: normal mode */
-		rc = r82xx_write_reg_mask(priv, 0x1c, 0, 0x04);
-		if (rc < 0)
-			return rc;
+	/* 0: normal mode */
+	rc = r82xx_write_reg_mask(priv, 0x1c, 0, 0x04);
+	if (rc < 0)
+		return rc;
 
-		/* 0: PRE_DECT off */
-		rc = r82xx_write_reg_mask(priv, 0x06, 0, 0x40);
-		if (rc < 0)
-			return rc;
+	/* 0: PRE_DECT off */
+	rc = r82xx_write_reg_mask(priv, 0x06, 0, 0x40);
+	if (rc < 0)
+		return rc;
 
-		/* agc clk 250hz */
-		rc = r82xx_write_reg_mask(priv, 0x1a, 0x30, 0x30);
-		if (rc < 0)
-			return rc;
+	/* agc clk 250hz */
+	rc = r82xx_write_reg_mask(priv, 0x1a, 0x30, 0x30);
+	if (rc < 0)
+		return rc;
 
 //		msleep(250);
 
-		/* write LNA TOP = 3 */
-		rc = r82xx_write_reg_mask(priv, 0x1d, 0x18, 0x38);
-		if (rc < 0)
-			return rc;
+	/* write LNA TOP = 3 */
+	rc = r82xx_write_reg_mask(priv, 0x1d, 0x18, 0x38);
+	if (rc < 0)
+		return rc;
 
-		/*
-		 * write discharge mode
-		 * FIXME: IMHO, the mask here is wrong, but it matches
-		 * what's there at the original driver
-		 */
-		rc = r82xx_write_reg_mask(priv, 0x1c, mixer_top, 0x04);
-		if (rc < 0)
-			return rc;
+	/*
+		* write discharge mode
+		* FIXME: IMHO, the mask here is wrong, but it matches
+		* what's there at the original driver
+		*/
+	rc = r82xx_write_reg_mask(priv, 0x1c, mixer_top, 0x04);
+	if (rc < 0)
+		return rc;
 
-		/* LNA discharge current */
-		rc = r82xx_write_reg_mask(priv, 0x1e, lna_discharge, 0x1f);
-		if (rc < 0)
-			return rc;
+	/* LNA discharge current */
+	rc = r82xx_write_reg_mask(priv, 0x1e, lna_discharge, 0x1f);
+	if (rc < 0)
+		return rc;
 
-		/* agc clk 60hz */
-		rc = r82xx_write_reg_mask(priv, 0x1a, 0x20, 0x30);
-		if (rc < 0)
-			return rc;
-	} else {
-		/* PRE_DECT off */
-		rc = r82xx_write_reg_mask(priv, 0x06, 0, 0x40);
-		if (rc < 0)
-			return rc;
+	/* agc clk 60hz */
+	rc = r82xx_write_reg_mask(priv, 0x1a, 0x20, 0x30);
+	if (rc < 0)
+		return rc;
 
-		/* write LNA TOP */
-		rc = r82xx_write_reg_mask(priv, 0x1d, lna_top, 0x38);
-		if (rc < 0)
-			return rc;
-
-		/*
-		 * write discharge mode
-		 * FIXME: IMHO, the mask here is wrong, but it matches
-		 * what's there at the original driver
-		 */
-		rc = r82xx_write_reg_mask(priv, 0x1c, mixer_top, 0x04);
-		if (rc < 0)
-			return rc;
-
-		/* LNA discharge current */
-		rc = r82xx_write_reg_mask(priv, 0x1e, lna_discharge, 0x1f);
-		if (rc < 0)
-			return rc;
-
-		/* agc clk 1Khz, external det1 cap 1u */
-		rc = r82xx_write_reg_mask(priv, 0x1a, 0x00, 0x30);
-		if (rc < 0)
-			return rc;
-
-		rc = r82xx_write_reg_mask(priv, 0x10, 0x00, 0x04);
-		if (rc < 0)
-			return rc;
-	 }
 	 return 0;
 }
 
@@ -816,78 +739,17 @@ static int r82xx_set_tv_standard(struct r82xx_priv *priv,
 	uint8_t lt_att, flt_ext_widest, polyfil_cur;
 	int need_calibration;
 
-	if (delsys == SYS_ISDBT) {
-		if_khz = 4063;
-		filt_cal_lo = 59000;
-		filt_gain = 0x10;	/* +3db, 6mhz on */
-		img_r = 0x00;		/* image negative */
-		filt_q = 0x10;		/* r10[4]:low q(1'b1) */
-		hp_cor = 0x6a;		/* 1.7m disable, +2cap, 1.25mhz */
-		ext_enable = 0x40;	/* r30[6], ext enable; r30[5]:0 ext at lna max */
-		loop_through = 0x00;	/* r5[7], lt on */
-		lt_att = 0x00;		/* r31[7], lt att enable */
-		flt_ext_widest = 0x00;	/* r15[7]: flt_ext_wide off */
-		polyfil_cur = 0x60;	/* r25[6:5]:min */
-	} else {
-		if (bw <= 6) {
-			if_khz = 3570;
-			filt_cal_lo = 56000;	/* 52000->56000 */
-			filt_gain = 0x10;	/* +3db, 6mhz on */
-			img_r = 0x00;		/* image negative */
-			filt_q = 0x10;		/* r10[4]:low q(1'b1) */
-			hp_cor = 0x6b;		/* 1.7m disable, +2cap, 1.0mhz */
-			ext_enable = 0x60;	/* r30[6]=1 ext enable; r30[5]:1 ext at lna max-1 */
-			loop_through = 0x00;	/* r5[7], lt on */
-			lt_att = 0x00;		/* r31[7], lt att enable */
-			flt_ext_widest = 0x00;	/* r15[7]: flt_ext_wide off */
-			polyfil_cur = 0x60;	/* r25[6:5]:min */
-		} else if (bw == 7) {
-#if 0
-			/*
-			 * There are two 7 MHz tables defined on the original
-			 * driver, but just the second one seems to be visible
-			 * by rtl2832. Keep this one here commented, as it
-			 * might be needed in the future
-			 */
-
-			if_khz = 4070;
-			filt_cal_lo = 60000;
-			filt_gain = 0x10;	/* +3db, 6mhz on */
-			img_r = 0x00;		/* image negative */
-			filt_q = 0x10;		/* r10[4]:low q(1'b1) */
-			hp_cor = 0x2b;		/* 1.7m disable, +1cap, 1.0mhz */
-			ext_enable = 0x60;	/* r30[6]=1 ext enable; r30[5]:1 ext at lna max-1 */
-			loop_through = 0x00;	/* r5[7], lt on */
-			lt_att = 0x00;		/* r31[7], lt att enable */
-			flt_ext_widest = 0x00;	/* r15[7]: flt_ext_wide off */
-			polyfil_cur = 0x60;	/* r25[6:5]:min */
-#endif
-			/* 7 MHz, second table */
-			if_khz = 4570;
-			filt_cal_lo = 63000;
-			filt_gain = 0x10;	/* +3db, 6mhz on */
-			img_r = 0x00;		/* image negative */
-			filt_q = 0x10;		/* r10[4]:low q(1'b1) */
-			hp_cor = 0x2a;		/* 1.7m disable, +1cap, 1.25mhz */
-			ext_enable = 0x60;	/* r30[6]=1 ext enable; r30[5]:1 ext at lna max-1 */
-			loop_through = 0x00;	/* r5[7], lt on */
-			lt_att = 0x00;		/* r31[7], lt att enable */
-			flt_ext_widest = 0x00;	/* r15[7]: flt_ext_wide off */
-			polyfil_cur = 0x60;	/* r25[6:5]:min */
-		} else {
-			if_khz = 4570;
-			filt_cal_lo = 68500;
-			filt_gain = 0x10;	/* +3db, 6mhz on */
-			img_r = 0x00;		/* image negative */
-			filt_q = 0x10;		/* r10[4]:low q(1'b1) */
-			hp_cor = 0x0b;		/* 1.7m disable, +0cap, 1.0mhz */
-			ext_enable = 0x60;	/* r30[6]=1 ext enable; r30[5]:1 ext at lna max-1 */
-			loop_through = 0x00;	/* r5[7], lt on */
-			lt_att = 0x00;		/* r31[7], lt att enable */
-			flt_ext_widest = 0x00;	/* r15[7]: flt_ext_wide off */
-			polyfil_cur = 0x60;	/* r25[6:5]:min */
-		}
-	}
+	if_khz = 4570;
+	filt_cal_lo = 68500;
+	filt_gain = 0x10;	/* +3db, 6mhz on */
+	img_r = 0x00;		/* image negative */
+	filt_q = 0x10;		/* r10[4]:low q(1'b1) */
+	hp_cor = 0x0b;		/* 1.7m disable, +0cap, 1.0mhz */
+	ext_enable = 0x60;	/* r30[6]=1 ext enable; r30[5]:1 ext at lna max-1 */
+	loop_through = 0x00;	/* r5[7], lt on */
+	lt_att = 0x00;		/* r31[7], lt att enable */
+	flt_ext_widest = 0x00;	/* r15[7]: flt_ext_wide off */
+	polyfil_cur = 0x60;	/* r25[6:5]:min */
 
 	/* Initialize the shadow registers */
 	memcpy(priv->regs, r82xx_init_array, sizeof(r82xx_init_array));
@@ -903,12 +765,11 @@ static int r82xx_set_tv_standard(struct r82xx_priv *priv,
 		return rc;
 
 	/* for LT Gain test */
-	if (type != TUNER_ANALOG_TV) {
-		rc = r82xx_write_reg_mask(priv, 0x1d, 0x00, 0x38);
-		if (rc < 0)
-			return rc;
-//		usleep_range(1000, 2000);
-	}
+	rc = r82xx_write_reg_mask(priv, 0x1d, 0x00, 0x38);
+	if (rc < 0)
+		return rc;
+//	usleep_range(1000, 2000);
+
 	priv->int_freq = if_khz * 1000;
 
 	/* Check if standard changed. If so, filter calibration is needed */
@@ -1022,7 +883,7 @@ static int r82xx_set_tv_standard(struct r82xx_priv *priv,
 
 static int r82xx_read_gain(struct r82xx_priv *priv)
 {
-	#ifdef DEBUG
+	#if DEBUG > 5
 		fprintf(stderr, "Entered in %s()\n", __FUNCTION__);
 	#endif
 
@@ -1245,10 +1106,10 @@ static const int r82xx_if_low_pass_bw_table[] = {
 
 #define FILT_HP_BW1 350000
 #define FILT_HP_BW2 380000
-int r82xx_set_bandwidth(struct r82xx_priv *priv, int bw, uint32_t rate, uint32_t * applied_bw, int apply)
+int r82xx_set_bandwidth(struct r82xx_priv *priv, uint32_t bw, uint32_t rate, uint32_t * applied_bw, int apply)
 {
 	#ifdef DEBUG
-		fprintf(stderr, "Entered in %s() bw=%d, rate=%d, applied_bw=%d, apply=1\n", __FUNCTION__, bw, rate, applied_bw, apply);
+		fprintf(stderr, "Entered in %s( bw=%lu, rate=%lu, applied_bw=%lu, apply=1 )\n", __FUNCTION__, (unsigned long)bw, (unsigned long)rate, applied_bw, apply);
 	#endif
 
 	int rc;
@@ -1336,7 +1197,7 @@ int r82xx_set_bandwidth(struct r82xx_priv *priv, int bw, uint32_t rate, uint32_t
 int r82xx_set_freq(struct r82xx_priv *priv, uint32_t freq)
 {
 	#ifdef DEBUG
-		fprintf(stderr, "Entered in %s()\n", __FUNCTION__);
+		fprintf(stderr, "Entered in %s( freq=%lu )\n", __FUNCTION__, (unsigned long)freq);
 	#endif
 
 	int rc = -1;

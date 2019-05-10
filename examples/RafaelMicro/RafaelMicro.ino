@@ -11,6 +11,16 @@
 #define MINIMAL_BUF_LENGTH		512
 #define MAXIMAL_BUF_LENGTH		(256 * 16384)
 
+void exit(int code) {
+	/* simulate exit() avoiding Arduino loop() */
+	fprintf(stderr, "exit(%d)\n", code);
+
+	while(1) {
+		/* do nothing */
+		delay(100);
+	}
+}
+
 void setup() {
 	Serial.begin (115200);
 	STDIO.open (Serial); // connect serial port to stdin/out/err
@@ -30,7 +40,7 @@ void setup() {
 	int dev_index = 0;
 	int dev_given = 0;
 	//uint32_t frequency = 100000000;
-	uint32_t frequency = 102000000;
+	uint32_t frequency = 160000000;
 	uint32_t bandwidth = DEFAULT_BANDWIDTH;
 	uint32_t samp_rate = DEFAULT_SAMPLE_RATE;
 	uint32_t out_block_size = DEFAULT_BUF_LENGTH;
@@ -57,7 +67,7 @@ void setup() {
 	case RTLSDR_TUNER_R820T:
 		break;
 	case RTLSDR_TUNER_R842T:
-		dev->tun_xtal = R828D_XTAL_FREQ; // ???
+		//dev->tun_xtal = R828D_XTAL_FREQ; // ???
 		break;
 	case RTLSDR_TUNER_UNKNOWN:
 		fprintf(stderr, "No supported tuner found\n");
@@ -71,6 +81,7 @@ void setup() {
 	
 	if (r < 0) {
 		fprintf(stderr, "Failed to init the tuner\n");
+		exit(r);
 	}
 
 	/* Set the sample rate */
@@ -82,22 +93,19 @@ void setup() {
 	/* Set the frequency */
 	verbose_set_frequency(dev, frequency);
 
-	// if (0 == gain) {
-	// 	 /* Enable automatic gain */
-	// 	verbose_auto_gain(dev);
-	// } else {
-	// 	/* Enable manual gain */
-	// 	gain = nearest_gain(dev, gain);
-	// 	verbose_gain_set(dev, gain);
-	// }
+	if (gain == 0) {
+	 	 /* Enable automatic gain */
+	 	verbose_auto_gain(dev);
+	} else {
+		/* Enable manual gain */
+		gain = nearest_gain(dev, gain);
+		verbose_gain_set(dev, gain);
+	}
 
-	// verbose_ppm_set(dev, ppm_error);
+	verbose_ppm_set(dev, ppm_error);
 
 	/* Reset endpoint before we start reading from it (mandatory) */
 	//	verbose_reset_buffer(dev);
-
-
-
 
 
 	#ifdef DEBUG

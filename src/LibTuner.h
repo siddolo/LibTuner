@@ -30,7 +30,7 @@ typedef struct rtlsdr_tuner_iface {
 	int (*init)(void *);
 	int (*exit)(void *);
 	int (*set_freq)(void *, uint32_t freq /* Hz */);
-	int (*set_bw)(void *, int bw /* Hz */, uint32_t *applied_bw /* configured bw in Hz */, int apply /* 1 == configure it!, 0 == deliver applied_bw */);
+	int (*set_bw)(void *, uint32_t bw /* Hz */, uint32_t *applied_bw /* configured bw in Hz */, int apply /* 1 == configure it!, 0 == deliver applied_bw */);
 	int (*set_gain)(void *, int gain /* tenth dB */);
 	int (*set_if_gain)(void *, int stage, int gain /* tenth dB */);
 	int (*set_gain_mode)(void *, int manual);
@@ -63,7 +63,7 @@ int rtlsdr_read_array(rtlsdr_dev_t *dev, uint16_t addr, uint8_t *array, uint8_t 
 	#if DEBUG > 5
 		fprintf(stderr, "Entered in %s()\n", __FUNCTION__);
 	#endif
-	#ifdef DEBUG
+	#if DEBUG > 6
 		fprintf(stderr, "I2C read to addr=0x%02x, len=%d, data=", addr, len);
 	#endif
 
@@ -74,12 +74,12 @@ int rtlsdr_read_array(rtlsdr_dev_t *dev, uint16_t addr, uint8_t *array, uint8_t 
 	//for (;r<len;r++) {
 		array[r] = Wire.read();
 		//memcpy(array,  Wire.read(), 1);
-		#ifdef DEBUG
+		#if DEBUG > 6
 			fprintf(stderr, "0x%02x ", r82xx_bitrev(array[r]));
 		#endif
 		r++;
 	}
-	#ifdef DEBUG
+	#if DEBUG > 6
 		fprintf(stderr, "\n");
 	#endif
 
@@ -93,7 +93,7 @@ int rtlsdr_write_array(rtlsdr_dev_t *dev, uint16_t addr, uint8_t *array, uint8_t
 	#if DEBUG > 5
 		fprintf(stderr, "Entered in %s()\n", __FUNCTION__);
 	#endif
-	#ifdef DEBUG
+	#if DEBUG > 6
 		fprintf(stderr, "I2C write to addr=0x%02x, len=%d, data=", addr, len);
 	#endif
 
@@ -102,13 +102,13 @@ int rtlsdr_write_array(rtlsdr_dev_t *dev, uint16_t addr, uint8_t *array, uint8_t
 
 	Wire.beginTransmission((uint8_t) addr);
 	for (i=0; i<len; i++) {
-		#ifdef DEBUG
+		#if DEBUG > 6
 			fprintf(stderr, "0x%02x ", array[i]);
 		#endif
 		r += Wire.write((uint8_t) array[i]);
 	}
   	Wire.endTransmission();
-	#ifdef DEBUG
+	#if DEBUG > 6
 		fprintf(stderr, "\n");
 	#endif
 
@@ -220,7 +220,8 @@ int r820t_init(void *dev) {
 		devt->r82xx_c.rafael_chip = CHIP_R820T;
 	} else {
 		devt->r82xx_c.i2c_addr = R842T_I2C_ADDR;
-		devt->r82xx_c.rafael_chip = CHIP_R828D; // ???
+		//devt->r82xx_c.rafael_chip = CHIP_R828D; // ???
+		devt->r82xx_c.rafael_chip = CHIP_R820T;
 	}
 
 	rtlsdr_get_xtal_freq(devt, NULL, &devt->r82xx_c.xtal);
@@ -242,7 +243,11 @@ int r820t_set_freq(void *dev, uint32_t freq) {
 	return r82xx_set_freq(&devt->r82xx_p, freq);
 }
 
-int r820t_set_bw(void *dev, int bw, uint32_t *applied_bw, int apply) {
+int r820t_set_bw(void *dev, uint32_t bw, uint32_t *applied_bw, int apply) {
+	#ifdef DEBUG
+		fprintf(stderr, "Entered in %s( bw=%lu, applied_bw=%lu, apply=%d )\n", __FUNCTION__, (unsigned long)bw, (unsigned long)applied_bw, apply);
+	#endif
+
 	int r;
 	rtlsdr_dev_t* devt = (rtlsdr_dev_t*)dev;
 
@@ -318,7 +323,7 @@ int rtlsdr_set_sample_rate(rtlsdr_dev_t *dev, uint32_t samp_rate)
 	/* check if the rate is supported by the resampler */
 	if ((samp_rate <= 225000) || (samp_rate > 3200000) ||
 		 ((samp_rate > 300000) && (samp_rate <= 900000))) {
-		fprintf(stderr, "Invalid sample rate: %u Hz\n", samp_rate);
+		fprintf(stderr, "Invalid sample rate: %lu Hz\n", (unsigned long)samp_rate);
 		return -22; /* EINVAL (22) Invalid argument */
 	}
 
@@ -353,14 +358,6 @@ int rtlsdr_set_and_get_tuner_bandwidth(rtlsdr_dev_t *dev, uint32_t bw, uint32_t 
 
 	if (!dev || !dev->tuner)
 		return -1;
-
-	if(!apply_bw)
-	{
-		if (dev->tuner->set_bw) {
-			r = dev->tuner->set_bw(dev, bw > 0 ? bw : dev->rate, applied_bw, apply_bw);
-		}
-		return r;
-	}
 
 	if (dev->tuner->set_bw) {
 		r = dev->tuner->set_bw(dev, bw > 0 ? bw : dev->rate, applied_bw, apply_bw);
@@ -486,7 +483,7 @@ int verbose_set_frequency(rtlsdr_dev_t *dev, uint32_t frequency)
 	if (r < 0) {
 		fprintf(stderr, "WARNING: Failed to set center freq.\n");
 	} else {
-		fprintf(stderr, "Tuned to %u Hz.\n", frequency);
+		fprintf(stderr, "Tuned to %lu Hz.\n", (unsigned long)frequency);
 	}
 	return r;
 }
@@ -498,7 +495,7 @@ int verbose_set_sample_rate(rtlsdr_dev_t *dev, uint32_t samp_rate)
 	if (r < 0) {
 		fprintf(stderr, "WARNING: Failed to set sample rate.\n");
 	} else {
-		fprintf(stderr, "Sampling at %u S/s.\n", samp_rate);
+		fprintf(stderr, "Sampling at %lu S/s.\n", (unsigned long)samp_rate);
 	}
 	return r;
 }
@@ -514,11 +511,11 @@ int verbose_set_bandwidth(rtlsdr_dev_t *dev, uint32_t bandwidth)
 		fprintf(stderr, "WARNING: Failed to set bandwidth.\n");
 	} else if (bandwidth > 0) {
 		if (applied_bw)
-			fprintf(stderr, "Bandwidth parameter %u Hz resulted in %u Hz.\n", bandwidth, applied_bw);
+			fprintf(stderr, "Bandwidth parameter %lu Hz resulted in %lu Hz.\n", (unsigned long)bandwidth, (unsigned long)applied_bw);
 		else
-			fprintf(stderr, "Set bandwidth parameter %u Hz.\n", bandwidth);
+			fprintf(stderr, "Set bandwidth parameter %lu Hz.\n", (unsigned long)bandwidth);
 	} else {
-		fprintf(stderr, "Bandwidth set to automatic resulted in %u Hz.\n", applied_bw);
+		fprintf(stderr, "Bandwidth set to automatic resulted in %lu Hz.\n", (unsigned long)applied_bw);
 	}
 	return r;
 }
