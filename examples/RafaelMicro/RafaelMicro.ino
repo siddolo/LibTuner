@@ -107,12 +107,6 @@ void setup() {
 	/* Reset endpoint before we start reading from it (mandatory) */
 	//	verbose_reset_buffer(dev);
 
-	int i;
-	for (i=1; i<=255; i++) {
-		delay(2000);
-		verbose_gain_set(dev, i);
-	}
-
 
 	#ifdef DEBUG
 		fprintf(stderr, "End Setup\n");
