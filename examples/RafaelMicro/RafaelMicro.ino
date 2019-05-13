@@ -40,7 +40,7 @@ void setup() {
 	int dev_index = 0;
 	int dev_given = 0;
 	//uint32_t frequency = 100000000;
-	uint32_t frequency = 160000000;
+	uint32_t frequency = 102000000;
 	uint32_t bandwidth = DEFAULT_BANDWIDTH;
 	uint32_t samp_rate = DEFAULT_SAMPLE_RATE;
 	uint32_t out_block_size = DEFAULT_BUF_LENGTH;
@@ -106,6 +106,12 @@ void setup() {
 
 	/* Reset endpoint before we start reading from it (mandatory) */
 	//	verbose_reset_buffer(dev);
+
+	int i;
+	for (i=1; i<=255; i++) {
+		delay(2000);
+		verbose_gain_set(dev, i);
+	}
 
 
 	#ifdef DEBUG

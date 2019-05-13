@@ -386,7 +386,7 @@ static int r82xx_read(struct r82xx_priv *priv, uint8_t reg, uint8_t *val, int le
 
 static int r82xx_set_mux(struct r82xx_priv *priv, uint32_t freq)
 {
-	#ifdef DEBUG
+	#if DEBUG > 5
 		fprintf(stderr, "Entered in %s( freq=%lu )\n", __FUNCTION__, (unsigned long)freq);
 	#endif
 
@@ -450,7 +450,7 @@ static int r82xx_set_mux(struct r82xx_priv *priv, uint32_t freq)
 
 static int r82xx_set_pll(struct r82xx_priv *priv, uint32_t freq)
 {
-	#ifdef DEBUG
+	#if DEBUG > 5
 		fprintf(stderr, "Entered in %s( freq=%lu )\n", __FUNCTION__, (unsigned long)freq);
 	#endif
 
@@ -602,7 +602,7 @@ static int r82xx_sysfreq_sel(struct r82xx_priv *priv, uint32_t freq,
 				 enum r82xx_tuner_type type,
 				 uint32_t delsys)
 {
-	#ifdef DEBUG
+	#if DEBUG > 5
 		fprintf(stderr, "Entered in %s( freq=%lu, type=%u, delsys=%lu )\n", __FUNCTION__, (unsigned long)freq, type, (unsigned long)delsys);
 	#endif
 
@@ -723,12 +723,12 @@ static int r82xx_sysfreq_sel(struct r82xx_priv *priv, uint32_t freq,
 }
 
 static int r82xx_set_tv_standard(struct r82xx_priv *priv,
-				 unsigned bw,
+				 uint32_t bw,
 				 enum r82xx_tuner_type type,
 				 uint32_t delsys)
 
 {
-	#ifdef DEBUG
+	#if DEBUG > 5
 		fprintf(stderr, "Entered in %s()\n", __FUNCTION__);
 	#endif
 
@@ -1108,13 +1108,13 @@ static const int r82xx_if_low_pass_bw_table[] = {
 #define FILT_HP_BW2 380000
 int r82xx_set_bandwidth(struct r82xx_priv *priv, uint32_t bw, uint32_t rate, uint32_t * applied_bw, int apply)
 {
-	#ifdef DEBUG
-		fprintf(stderr, "Entered in %s( bw=%lu, rate=%lu, applied_bw=%lu, apply=1 )\n", __FUNCTION__, (unsigned long)bw, (unsigned long)rate, applied_bw, apply);
+	#if DEBUG > 5
+		fprintf(stderr, "Entered in %s( bw=%lu, rate=%lu, applied_bw=%lu, apply=1 )\n", __FUNCTION__, (unsigned long)bw, (unsigned long)rate, (unsigned long)*applied_bw, apply);
 	#endif
 
 	int rc;
 	unsigned int i;
-	int real_bw = 0;
+	uint32_t real_bw = 0;
 	uint8_t reg_0a;
 	uint8_t reg_0b;
 
@@ -1196,7 +1196,7 @@ int r82xx_set_bandwidth(struct r82xx_priv *priv, uint32_t bw, uint32_t rate, uin
 
 int r82xx_set_freq(struct r82xx_priv *priv, uint32_t freq)
 {
-	#ifdef DEBUG
+	#if DEBUG > 5
 		fprintf(stderr, "Entered in %s( freq=%lu )\n", __FUNCTION__, (unsigned long)freq);
 	#endif
 
@@ -1353,7 +1353,7 @@ static int r82xx_xtal_check(struct r82xx_priv *priv)
 
 int r82xx_init(struct r82xx_priv *priv)
 {
-	#ifdef DEBUG
+	#if DEBUG > 5
 		fprintf(stderr, "Entered in %s()\n", __FUNCTION__);
 	#endif
 

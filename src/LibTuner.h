@@ -244,8 +244,8 @@ int r820t_set_freq(void *dev, uint32_t freq) {
 }
 
 int r820t_set_bw(void *dev, uint32_t bw, uint32_t *applied_bw, int apply) {
-	#ifdef DEBUG
-		fprintf(stderr, "Entered in %s( bw=%lu, applied_bw=%lu, apply=%d )\n", __FUNCTION__, (unsigned long)bw, (unsigned long)applied_bw, apply);
+	#if DEBUG > 5
+		fprintf(stderr, "Entered in %s( bw=%lu, applied_bw=%lu, apply=%d )\n", __FUNCTION__, (unsigned long)bw, (unsigned long)*applied_bw, apply);
 	#endif
 
 	int r;
@@ -291,8 +291,10 @@ int r820t_set_gain_mode(void *dev, int manual) {
 
 int rtlsdr_set_offset_tuning(rtlsdr_dev_t *dev, int on)
 {
+	/* TODO: REMOVE */
+
 	int r = 0;
-	int bw;
+	uint32_t bw;
 
 	if (!dev)
 		return -1;
